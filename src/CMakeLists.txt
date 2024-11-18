@@ -5,11 +5,12 @@ add_executable(${NAME}
 target_link_libraries(${NAME} 
     pico_stdlib
     FreeRTOS-Kernel-Heap4
+    freertos_config
 )
 	
 target_include_directories(${NAME} PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_CURRENT_LIST_DIR}/../lib/FreeRTOS-Kernel/include
+    ${CMAKE_CURRENT_LIST_DIR}/../lib/include
     ${CMAKE_CURRENT_LIST_DIR}/src
 
     ${CMAKE_CURRENT_LIST_DIR}/../config
