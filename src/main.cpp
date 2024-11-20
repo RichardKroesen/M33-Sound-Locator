@@ -5,10 +5,16 @@
 
 void mainTask(void *params) {
 	printf("Boot task started\n");
+	gpio_init(PICO_DEFAULT_LED_PIN);
+	gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
 
 	for (;;) {
+		static int mytemptemptempVar = 430;
+		gpio_put(PICO_DEFAULT_LED_PIN, 1);
 		vTaskDelay(500);
         printf("Heartbeat...\n");
+		gpio_put(PICO_DEFAULT_LED_PIN, 0);
+		vTaskDelay(500);
 	}
 }
 
