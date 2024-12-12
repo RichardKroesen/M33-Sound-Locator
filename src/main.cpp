@@ -3,24 +3,28 @@
 #include "pico/stdlib.h"
 #include <cstdio>
 
+#include <adc_driver.hpp>
+
 void mainTask(void *params) {
 	printf("Boot task started\n");
 	gpio_init(PICO_DEFAULT_LED_PIN);
 	gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
 
+	static DRIVER::ADC_Driver test{};
+
 	for (;;) {
-		static int mytemptemptempVar = 430;
+		// static int mytemptemptempVar = 430;
 		gpio_put(PICO_DEFAULT_LED_PIN, 1);
-		vTaskDelay(500);
-        printf("Heartbeat...\n");
+		vTaskDelay(10);
+        printf("%u\n", test.adc_value);
 		gpio_put(PICO_DEFAULT_LED_PIN, 0);
-		vTaskDelay(500);
+		vTaskDelay(10);
 	}
 }
 
 static inline void vLaunch() {
     TaskHandle_t task;
-    xTaskCreate(mainTask, "MainThread", 500, NULL, tskIDLE_PRIORITY, &task);
+    xTaskCreate(mainTask, "MainThread", 700, NULL, tskIDLE_PRIORITY, &task);
 
     /* Start the tasks and timer running. */
     vTaskStartScheduler();
@@ -31,6 +35,6 @@ int main() {
 	stdio_init_all();
     vLaunch();
 
-	while(1);
+	while (1);
 	return 1;
 }

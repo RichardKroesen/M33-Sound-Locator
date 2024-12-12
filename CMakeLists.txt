@@ -31,3 +31,6 @@ add_compile_options(-Wall -Wno-format -Wno-unused-function -Wno-maybe-uninitiali
 
 # Link to libraries and set target executable
 add_subdirectory(src)
+
+# Import of libraries
+add_subdirectory(drivers)

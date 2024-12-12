@@ -6,6 +6,8 @@ target_link_libraries(${NAME}
     pico_stdlib
     FreeRTOS-Kernel-Heap4
     freertos_config
+
+    DRIVERS
 )
 	
 target_include_directories(${NAME} PRIVATE
@@ -14,6 +16,7 @@ target_include_directories(${NAME} PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src
 
     ${CMAKE_CURRENT_LIST_DIR}/../config
+    ${CMAKE_CURRENT_LIST_DIR}/../drivers
 )
 
 # Add map/bin/hex file etc additionally.
