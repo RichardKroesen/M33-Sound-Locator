@@ -10,15 +10,15 @@ void mainTask(void *params) {
 	gpio_init(PICO_DEFAULT_LED_PIN);
 	gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
 
-	static DRIVER::ADC_Driver test{};
+	static DRIVER::ADC_Driver<static_cast<uint32_t>(DRIVER::ADC_FREQUENCIES::FS_100k)>test{};
 
 	for (;;) {
 		// static int mytemptemptempVar = 430;
 		gpio_put(PICO_DEFAULT_LED_PIN, 1);
-		vTaskDelay(10);
+		vTaskDelay(1);
         printf("%u\n", test.adc_value);
 		gpio_put(PICO_DEFAULT_LED_PIN, 0);
-		vTaskDelay(10);
+		vTaskDelay(1);
 	}
 }
 
