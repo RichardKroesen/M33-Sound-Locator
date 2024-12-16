@@ -3,6 +3,8 @@
 #include "pico/stdlib.h"
 #include <cstdio>
 
+#include "arm_math.h" // Check of CMSIS DSP inclusion
+
 void mainTask(void *params) {
 	printf("Boot task started\n");
 	gpio_init(PICO_DEFAULT_LED_PIN);
