@@ -24,7 +24,14 @@ For proper usage of this repository the following things are needed:
 - libusb [download page](https://libusb.info/)
  
 Or use on Linux the following command:
-`sudo apt install cmake python3 build-essential gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib`
+`sudo apt install cmake python3 g++ build-essential ninja-build`
+installing the Arm GCC compiler (the hard way)
+1) ```wget https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi.tar.xz```
+2) ```tar -xvf arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi.tar.xz```
+3) Move to a common location: ```sudo mv arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi /opt/```
+4) Add to path: ```export PATH=$PATH:/opt/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi/bin```
+5) For Pico SDK: ```export PICO_TOOLCHAIN_PATH=/opt/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi``
+    ``` export PATH=$PICO_TOOLCHAIN_PATH/bin:$PATH```
 
 ## Troubleshooting 
 Since in our project group everyone is working on a different system there could be some compilation issues. In this section the most common issues are documented for quick reference. 
