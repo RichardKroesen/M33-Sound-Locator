@@ -4,6 +4,7 @@ set(PICO_BOARD pico2)
 set(PICO_PLATFORM rp2350)
 set(NAME LINEAR_SYSTEMS)
 
+set(PICO_SDK_FETCH_FROM_GIT ON)
 message("Pico SDK Source Directory: ${pico_sdk_SOURCE_DIR}")
 if (NOT DEFINED PICO_SDK_PATH)
     set(PICO_SDK_PATH "$ENV{PICO_SDK_PATH}")

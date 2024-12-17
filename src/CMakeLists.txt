@@ -6,9 +6,9 @@ add_dependencies(${NAME} CMSISDSP)
 target_link_libraries(${NAME} 
     pico_stdlib
     cmsis_core
+    CMSISDSP
     FreeRTOS-Kernel-Heap4
     freertos_config
-    CMSISDSP
 )
 	
 target_include_directories(${NAME} PRIVATE

@@ -1,7 +1,36 @@
-# Linear Systems Project
-Collaborative project for Linear Systems (5LIU0) course at TUe.
+# Sound Locator M33 
+This project has an educational purpose in the context of Digital Signal Processing & Control Systems. It is part of the Linear Systems (5LIU0)course at Technical University Eindhoven (TUe).
 
-Clone with
+*The project's problem definition is*: 
+> The challenge lies in accurately localizing a sound source on a two-dimensional plane
+in real-time using audio pulses of a predefined frequency.
+This involves addressing limitations in real-time processing, noise interference, and
+the computational constraints of embedded systems while designing and implementing an effective DSP algorithm.
+
+In more practical sense, it's a real-time processing system which locates the buzzer on a 2D plane. 
+
+## Getting Started
+**Clone by**: 
+
 ``
-git clone --recurse-submodules https://github.com/RichardKroesen/LinearSystemsProj.git
+git clone --recurse-submodules git@github.com:RichardKroesen/M33-Sound-Locator.git
 ``
+
+## Prerequisites 
+For proper usage of this repository the following things are needed: 
+- CMake
+- PicoSDK (if it is not properly automatically build with CMake configuration).
+- Arm GCC Compiler: [download page](https://developer.arm.com/downloads/-/gnu-rm)
+- libusb [download page](https://libusb.info/)
+ 
+Or use on Linux the following command:
+`sudo apt install cmake python3 build-essential gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib`
+
+## Troubleshooting 
+Since in our project group everyone is working on a different system there could be some compilation issues. In this section the most common issues are documented for quick reference. 
+
+After you cloned load the submodules properly:
+
+``
+git submodule update --init
+`` 
