@@ -4,6 +4,7 @@
 #include <cstdio>
 
 #include <adc_driver.hpp>
+#include "arm_math.h" // Check of CMSIS DSP inclusion
 
 void mainTask(void *params) {
 	printf("Boot task started\n");

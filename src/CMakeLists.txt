@@ -1,9 +1,12 @@
 add_executable(${NAME}
     main.cpp
 )
+add_dependencies(${NAME} CMSISDSP)
 
 target_link_libraries(${NAME} 
     pico_stdlib
+    cmsis_core
+    CMSISDSP
     FreeRTOS-Kernel-Heap4
     freertos_config
 
