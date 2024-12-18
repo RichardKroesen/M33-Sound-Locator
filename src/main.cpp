@@ -17,7 +17,7 @@ void mainTask(void *params) {
 		// static int mytemptemptempVar = 430;
 		gpio_put(PICO_DEFAULT_LED_PIN, 1);
 		vTaskDelay(1 / portTICK_PERIOD_MS);
-        printf("%u,%u,%u\n", test.adc_sample_buffer[0], test.adc_sample_buffer[1], test.adc_sample_buffer[2]);
+        printf("%u,%u,%u\n", test.adc_buffer.pop(), test.adc_buffer.pop(), test.adc_buffer.pop());
 		gpio_put(PICO_DEFAULT_LED_PIN, 0);
 		vTaskDelay(1 / portTICK_PERIOD_MS);
 	}

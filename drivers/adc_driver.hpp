@@ -6,11 +6,14 @@
 #include "hardware/adc.h"
 #include "system_references.hpp"
 
+#include "circular_buffer.hpp"
+
 namespace DRIVER {
 
 template<const uint32_t SAMPLE_RATE, const uint8_t CHANNELS = 3>
 class ADC_Driver {
     constexpr static inline uint8_t pins_amount = CHANNELS; 
+    // static inline CircularBuffer<uint16_t, CHANNELS * 10> adc_buffer{};
 
 public: 
     ADC_Driver() {
@@ -26,11 +29,9 @@ public:
             adc_irq_set_enabled(true);
             irq_set_enabled(ADC_IRQ_FIFO, true);
 
-            for (uint8_t i = 0; i < CHANNELS; i++) {
-                adc_sample_buffer[i] = 0;
-            }
+            adc_buffer.reset();
             
-            // adc_fifo_drain();
+            adc_fifo_drain();
             adc_run(true);
             return true;
         }
@@ -44,6 +45,8 @@ public:
         adc_fifo_drain();
     }
 
+    static inline CircularBuffer<uint16_t, CHANNELS * 10> adc_buffer{};
+    
     // I will differ this, since this will probably change due to buffering need...
     // static inline bool read_sample(const uint8_t channel, uint16_t &value) {
     //     if (channel < 3) {
@@ -54,8 +57,6 @@ public:
     //     }
     //     return false;
     // }
-
-    static inline volatile uint16_t adc_sample_buffer[pins_amount] = {0, 0, 0}; // Will become a buffer...
 
 protected: 
     typedef struct {
@@ -122,10 +123,8 @@ private:
 
     // Execute only from RAM, because of critical timing: 
     static void __not_in_flash_func(adc_handler)(void) {
-        if (! adc_fifo_is_empty()) {
-            for (int8_t i = CHANNELS-1; i >= 0; i--) {
-                adc_sample_buffer[i] = adc_fifo_get();
-            }
+        if (! adc_fifo_is_empty() && adc_buffer.isEmpty()) {
+            adc_buffer.push(adc_fifo_get());
         }
     }
 };
