@@ -1,10 +1,3 @@
-#include "FreeRTOS.h"
-#include "task.h"
-#include "pico/stdlib.h"
-#include <cstdio>
-
-#include <adc_driver.hpp>
-
 void mainTask(void *params) {
 	printf("Boot task started\n");
 	gpio_init(PICO_DEFAULT_LED_PIN);
@@ -28,21 +21,4 @@ void mainTask(void *params) {
 		gpio_put(PICO_DEFAULT_LED_PIN, 0);
 		// vTaskDelay(1 / portTICK_PERIOD_MS);
 	}
-}
-
-static inline void vLaunch() {
-    TaskHandle_t task;
-    xTaskCreate(mainTask, "MainThread", 1000, NULL, 2, &task);
-
-    /* Start the tasks and timer running. */
-    vTaskStartScheduler();
-}
-
-int main() {
-	/* Setup */
-	stdio_init_all();
-    vLaunch();
-
-	while (1);
-	return 1;
 }

@@ -2,34 +2,38 @@
 #define ADC_DRIVER_HPP
 
 #include <math.h>
+#include "stream_buffer.h"
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
+
 #include "system_references.hpp"
 
-#include "circular_buffer.hpp"
+namespace ADC {
 
-namespace DRIVER {
+template<const uint32_t SAMPLE_RATE, 
+const uint8_t CHANNELS = 3, uint32_t CHANNEL_BUFFER_SAMPLES_SIZE = 250>
 
-template<const uint32_t SAMPLE_RATE, const uint8_t CHANNELS = 3>
 class ADC_Driver {
     constexpr static inline uint8_t pins_amount = CHANNELS; 
-    // static inline CircularBuffer<uint16_t, CHANNELS * 10> adc_buffer{};
 
 public: 
     ADC_Driver() {
-        static_assert(CHANNELS < 5, "Err not possible to select than 4 channels.");
+        static_assert(SAMPLE_RATE > 0, "Err sample rate cannot be 0");
+        static_assert(CHANNELS < 5, "Err not possible to select more than 4 channels.");
         init();
     }
 
-    ~ADC_Driver() = default; 
+    ~ADC_Driver() {
+        if (stream_buffer != nullptr) {
+            vStreamBufferDelete(stream_buffer);
+        }
+    }
 
     const static inline bool start_adc() {
         if (init_flag) {
             adc_select_input(pinReferences[0].adc_reference); // Initial Channel. 
             adc_irq_set_enabled(true);
             irq_set_enabled(ADC_IRQ_FIFO, true);
-
-            adc_buffer.reset();
             
             adc_fifo_drain();
             adc_run(true);
@@ -45,48 +49,50 @@ public:
         adc_fifo_drain();
     }
 
-    static inline CircularBuffer<uint16_t, CHANNELS * 10> adc_buffer{};
+    bool readSamples(uint16_t* buffer, size_t count) {
+        size_t bytesRead = xStreamBufferReceive(stream_buffer, buffer, count * sizeof(uint16_t), 0);
+        return (bytesRead == count * sizeof(uint16_t));
+    }
     
-    // I will differ this, since this will probably change due to buffering need...
-    // static inline bool read_sample(const uint8_t channel, uint16_t &value) {
-    //     if (channel < 3) {
-    //         taskENTER_CRITICAL();
-    //         value = adc_sample_buffer;
-    //         taskEXIT_CRITICAL();
-    //         return true;
-    //     }
-    //     return false;
-    // }
-
 protected: 
+    constexpr static inline uint32_t ADC_CYCLES_REQUIRED = 96;
+    constexpr static inline uint32_t ADC_CLK_RATE = 48'000'000;
+
+    static inline StreamBufferHandle_t stream_buffer = nullptr;
+
     typedef struct {
         const uint8_t pin;
         const uint8_t adc_reference;
     } pin_reference_t;
 
+
     constexpr inline static pin_reference_t pinReferences[pins_amount] = {
-        {26, 0},
-        {27, 1},
-        {28, 2}
+        {26, 0},    /* GPIO26 --> ADC_CHANNEL 0*/
+        {27, 1},    /* GPIO27 --> ADC_CHANNEL 1*/
+        {28, 2}     /* GPIO28 --> ADC_CHANNEL 2*/
     };
 
-    const static inline constexpr uint32_t compute_divider() {
-        uint32_t divider_value = std::round((48'000'000/96) / SAMPLE_RATE);
-
-        if constexpr (CHANNELS != 0) {
-            divider_value = std::round(divider_value * CHANNELS);
-        }
+    const static inline constexpr uint32_t compute_clk_divider() {
+        // 48 MHz/96 Cycles / DIV = Sampling Frequency.
+        uint32_t divider_value = std::round((ADC_CLK_RATE / ADC_CYCLES_REQUIRED) / SAMPLE_RATE);
+        divider_value = std::round(divider_value * CHANNELS);
         return divider_value;
     } 
 
 private: 
+    constexpr static size_t STREAM_BUFFER_B_SIZE 
+        = CHANNELS * CHANNEL_BUFFER_SAMPLES_SIZE * sizeof(uint16_t);        // Size in bytes
+    constexpr static size_t TRIGGER_LEVEL = CHANNELS * sizeof(uint16_t);    // Minimum bytes to wake a task
+    constexpr static inline uint32_t clk_divider = compute_clk_divider();
+
     static inline bool init_flag = false;
-    // 48 MHz/96 Cycles / DIV = Sampling Frequency.
-    constexpr static inline uint32_t clk_divider = compute_divider();
 
     static inline void init() {
         if (! init_flag) {
             uint16_t adc_channels_mask = 0x0000;
+            stream_buffer = xStreamBufferCreate(STREAM_BUFFER_B_SIZE, TRIGGER_LEVEL);
+            configASSERT(stream_buffer != nullptr);
+
             adc_init();
             
             for (auto &p : pinReferences) {
@@ -123,11 +129,15 @@ private:
 
     // Execute only from RAM, because of critical timing: 
     static void __not_in_flash_func(adc_handler)(void) {
-        if (! adc_fifo_is_empty() && adc_buffer.isEmpty()) {
-            adc_buffer.push(adc_fifo_get());
+        static uint16_t inter_buffer[CHANNELS]{};
+
+        if (! adc_fifo_is_empty()) {
+            for (int8_t i = 0; i < CHANNELS; i++) {
+                inter_buffer[i] = adc_fifo_get();
+            }
+            xStreamBufferSendFromISR(stream_buffer, inter_buffer, sizeof(inter_buffer), nullptr);
         }
     }
-};
-
-};
-#endif // ADC_DRIVER_HPP
+}; // ADC_DRIVER Class
+}; // ADC Namespace
+#endif /* ADC_DRIVER_HPP */
