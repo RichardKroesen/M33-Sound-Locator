@@ -46,6 +46,7 @@ public:
         adc_run(false);
         adc_irq_set_enabled(false);
         irq_set_enabled(ADC_IRQ_FIFO, false);
+        xStreamBufferReset(stream_buffer);
         adc_fifo_drain();
     }
 
