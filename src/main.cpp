@@ -6,7 +6,7 @@
 
 #include <adc_driver_dma.hpp>
 #include <adc_driver.hpp>
-#include "arm_math.h" // Check of CMSIS DSP inclusion
+// #include "arm_math.h" // Check of CMSIS DSP inclusion
 
 TaskHandle_t demuxTaskHandle;
 
