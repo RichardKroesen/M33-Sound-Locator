@@ -18,11 +18,10 @@ void DemuxTask(void *param) {
     while (1) {
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
         adcDriver->get_buffer(buffer);
-        for (uint32_t i = 0; i <= 297; i = i + 3) {
+        for (uint32_t i = 0; i < 898; i = i + 3) {
             printf("%u,%u,%u\n", buffer[i], buffer[i+1], buffer[i+2]);
         }
         adcDriver->start_adc();
-        // memset(buffer, 0, sizeof(buffer));
     }
 }
 
@@ -35,7 +34,7 @@ int main() {
 	}
 
 	static ADC::ADC_Driver_DMA<ADC_FREQUENCIES::FS_100k>* adcDriver = new ADC::ADC_Driver_DMA<ADC_FREQUENCIES::FS_100k>();
-    xTaskCreate(DemuxTask, "DemuxTask", 1000, adcDriver, 3, &demuxTaskHandle);
+    xTaskCreate(DemuxTask, "DemuxTask", 1000, adcDriver, 1, &demuxTaskHandle);
 
     vTaskStartScheduler();
 

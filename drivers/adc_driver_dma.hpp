@@ -34,6 +34,8 @@ public:
         if (init_flag) {
             // Clear the DMA Buffer;
             adc_run(false);
+            adc_fifo_drain();
+
             memset(dma_buffer, 0, sizeof(dma_buffer));
             adc_select_input(pinReferences[0].adc_reference); // Initial Channel. 
 
@@ -52,7 +54,6 @@ public:
                 true                                    // start immediately
             );
 
-            adc_fifo_drain();
             adc_run(true);
             return true;
         }
@@ -128,7 +129,7 @@ private:
                 true,       // Enable FIFO
                 true,       // DMA Enabled
                 CHANNELS,   // Threshold value, RP2350 can only hold 8 samples in FIFO
-                false,      // No error interrupts
+                false,       // No error interrupts
                 false       // No threshold interrupts
             );
 
