@@ -2,46 +2,42 @@
 #include "task.h"
 #include "pico/stdlib.h"
 #include <cstdio>
+#include "tusb.h"
 
-#include <adc_driver.hpp>
+#include <adc_driver_dma.hpp>
 
-void mainTask(void *params) {
-	printf("Boot task started\n");
-	gpio_init(PICO_DEFAULT_LED_PIN);
-	gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+TaskHandle_t demuxTaskHandle;
 
-	static ADC::ADC_Driver<static_cast<uint32_t>(ADC_FREQUENCIES::FS_1k)>test{};
-	test.start_adc();
-    uint16_t adcSamples[3];
+void DemuxTask(void *param) {
+    ADC::ADC_Driver_DMA<ADC_FREQUENCIES::FS_100k>* adcDriver = static_cast<ADC::ADC_Driver_DMA<ADC_FREQUENCIES::FS_100k>*>(param);
+    static uint16_t buffer[900];
 
-	for (;;) {
-		static int mytemptemptempVar = 430;
-		gpio_put(PICO_DEFAULT_LED_PIN, 1);
-		// vTaskDelay(1 / portTICK_PERIOD_MS);
+    adcDriver->set_notification_task(demuxTaskHandle);
+    adcDriver->start_adc();
 
-        if (test.readSamples(adcSamples, 3)) {
-            printf("%u,%u,%u\n", adcSamples[0], adcSamples[1], adcSamples[2]);
-        } else {
-            printf("Failed to read ADC samples.\n");
+    while (1) {
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        adcDriver->get_buffer(buffer);
+        for (uint32_t i = 0; i <= 297; i = i + 3) {
+            printf("%u,%u,%u\n", buffer[i], buffer[i+1], buffer[i+2]);
         }
-
-		gpio_put(PICO_DEFAULT_LED_PIN, 0);
-		// vTaskDelay(1 / portTICK_PERIOD_MS);
-	}
-}
-
-static inline void vLaunch() {
-    TaskHandle_t task;
-    xTaskCreate(mainTask, "MainThread", 1000, NULL, 2, &task);
-
-    /* Start the tasks and timer running. */
-    vTaskStartScheduler();
+        adcDriver->start_adc();
+        // memset(buffer, 0, sizeof(buffer));
+    }
 }
 
 int main() {
 	/* Setup */
 	stdio_init_all();
-    vLaunch();
+	while (! tud_cdc_connected()) {
+		printf(".");
+		sleep_ms(500);
+	}
+
+	static ADC::ADC_Driver_DMA<ADC_FREQUENCIES::FS_100k>* adcDriver = new ADC::ADC_Driver_DMA<ADC_FREQUENCIES::FS_100k>();
+    xTaskCreate(DemuxTask, "DemuxTask", 1000, adcDriver, 3, &demuxTaskHandle);
+
+    vTaskStartScheduler();
 
 	while (1);
 	return 1;
