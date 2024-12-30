@@ -8,7 +8,6 @@ enum class ADC_FREQUENCIES : uint32_t {
     FS_1k       = 1'000,
     FS_10k      = 10'000,
     FS_100k     = 100'000,
-
     FS_MAX_PICO = 500'000,
 }; 
 

@@ -13,13 +13,14 @@
 
 namespace ADC {
 
-template<const ADC_FREQUENCIES SAMPLE_RATE = ADC_FREQUENCIES::FS_100hz, 
-const uint8_t CHANNELS = 3, 
-uint32_t CHANNEL_BUFFER_SAMPLES_SIZE = 630>
+template<const ADC_FREQUENCIES SAMPLE_RATE, 
+uint32_t CHANNEL_BUFFER_SAMPLES_SIZE = 300,
+uint32_t BATCH_BUFFER_SIZE = CHANNEL_BUFFER_SAMPLES_SIZE,
+const uint8_t CHANNELS = 3>
 
-class ADC_Driver : public IADC_Driver<SAMPLE_RATE, CHANNELS, CHANNEL_BUFFER_SAMPLES_SIZE> {
+class ADC_Driver : public IADC_Driver<SAMPLE_RATE, CHANNEL_BUFFER_SAMPLES_SIZE, BATCH_BUFFER_SIZE, CHANNELS> {
     
-    using IADC = IADC_Driver<SAMPLE_RATE, CHANNELS, CHANNEL_BUFFER_SAMPLES_SIZE>; // Alias for convenience
+    using IADC = IADC_Driver<SAMPLE_RATE, CHANNEL_BUFFER_SAMPLES_SIZE, BATCH_BUFFER_SIZE, CHANNELS>; // Alias for convenience
 
 public: 
     ADC_Driver() {
@@ -42,21 +43,14 @@ public:
         stop_adc_static();
     }
 
-    static inline void set_notification_task(TaskHandle_t task) {
-        notificationTask = task;
+    void set_notification_task(const TaskHandle_t task) override {
+        this->notificationTask = task;
     }
 
-    // static inline void get_buffer(uint16_t *buf) {        
-    //     vPortEnterCritical();
-    //     xStreamBufferReceive(stream_buffer, buf, sizeof(stream_buffer), 0);
-    //     vPortExitCritical();
-    // }
-
-    bool readSamples(uint16_t* buffer, size_t count) {
-        vPortEnterCritical();
-        size_t bytesRead = xStreamBufferReceive(stream_buffer, buffer, count * sizeof(uint16_t), 0);
-        vPortExitCritical();
-        return (bytesRead == count * sizeof(uint16_t));
+    void copy_buffer(std::unique_ptr<uint16_t[]>& destination, const size_t size) override {
+        taskENTER_CRITICAL(); 
+        xStreamBufferReceive(stream_buffer, destination.get(), size * sizeof(uint16_t), 0);
+        taskEXIT_CRITICAL();
     }
     
 protected:

@@ -1,13 +1,14 @@
 #ifndef ADC_DRIVER_INTERFACE_HPP
-#define  ADC_DRIVER_INTERFACE_HPP
+#define ADC_DRIVER_INTERFACE_HPP
 
 #include <math.h>
 
 namespace ADC {
 
 template<const ADC_FREQUENCIES SAMPLE_RATE, 
-const uint8_t CHANNELS, 
-uint32_t CHANNEL_BUFFER_SAMPLES_SIZE>
+uint32_t CHANNEL_BUFFER_SAMPLES_SIZE,
+uint32_t BATCH_BUFFER_SIZE = CHANNEL_BUFFER_SAMPLES_SIZE,
+const uint8_t CHANNELS = 3>
 
 class IADC_Driver {
 public: 
@@ -15,6 +16,8 @@ public:
 
     virtual const bool start_adc() = 0;
     virtual void stop_adc() = 0;
+    virtual void set_notification_task(const TaskHandle_t task) = 0;
+    virtual void copy_buffer(std::unique_ptr<uint16_t[]>& destination, const size_t size) = 0;
 
 protected: 
     constexpr static inline uint32_t ADC_CYCLES_REQUIRED = 96;

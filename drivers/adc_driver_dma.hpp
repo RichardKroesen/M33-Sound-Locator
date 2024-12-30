@@ -1,26 +1,30 @@
 #ifndef ADC_DMA_DRIVER_HPP
 #define ADC_DMA_DRIVER_HPP
 
-#include <math.h>
+#include <math.h> // rounding
+#include <memory> // Smarpointer
+#include <iterator> // iterators
+
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
 #include "hardware/dma.h"
-#include "system_references.hpp"
 
+#include "system_references.hpp"
 #include "adc_driver_interface.hpp"
 
 namespace ADC {
 
 template<const ADC_FREQUENCIES SAMPLE_RATE, 
-const uint8_t CHANNELS = 3, 
-uint32_t CHANNEL_BUFFER_SAMPLES_SIZE = 300>
+uint32_t CHANNEL_BUFFER_SAMPLES_SIZE = 300,
+uint32_t BATCH_BUFFER_SIZE = CHANNEL_BUFFER_SAMPLES_SIZE,
+const uint8_t CHANNELS = 3>
 
-class ADC_Driver_DMA : public IADC_Driver<SAMPLE_RATE, CHANNELS, CHANNEL_BUFFER_SAMPLES_SIZE> {
+class ADC_Driver_DMA : public IADC_Driver<SAMPLE_RATE, CHANNEL_BUFFER_SAMPLES_SIZE, BATCH_BUFFER_SIZE, CHANNELS> {
 
-    using IADC = IADC_Driver<SAMPLE_RATE, CHANNELS, CHANNEL_BUFFER_SAMPLES_SIZE>; // Alias for convenience
+    using IADC = IADC_Driver<SAMPLE_RATE, CHANNEL_BUFFER_SAMPLES_SIZE, BATCH_BUFFER_SIZE, CHANNELS>; // Alias for convenience
 
 public: 
     ADC_Driver_DMA() {
@@ -42,21 +46,18 @@ public:
         stop_adc_static();
     }
 
-    static inline void set_notification_task(TaskHandle_t task) {
-        notificationTask = task;
+    void set_notification_task(const TaskHandle_t task) override {
+        this->notificationTask = task;
     }
 
-    static inline void get_buffer(uint16_t *buf) {
-        vPortEnterCritical();
-        memcpy(buf, dma_buffer, sizeof(dma_buffer));
-        vPortExitCritical();
+    void copy_buffer(std::unique_ptr<uint16_t[]>& destination, const size_t size) override {
+        configASSERT(size <= sizeof(dma_buffer) / sizeof(dma_buffer[0])); 
+        taskENTER_CRITICAL(); 
+        std::copy(std::begin(dma_buffer), std::begin(dma_buffer) + size, destination.get());
+        taskEXIT_CRITICAL();
     }
 
 protected:
-    
-    static inline void stop_adc_static() {
-        adc_run(false);
-    }
 
     const static inline bool start_adc_static() {
         init();
@@ -74,36 +75,14 @@ protected:
         return false; 
     }
 
-// protected: 
-//     constexpr static inline uint32_t ADC_CYCLES_REQUIRED = 96;
-//     constexpr static inline uint32_t ADC_CLK_RATE = 48'000'000;
-//     constexpr static inline uint8_t pins_amount = CHANNELS; 
-
-//     static inline uint16_t dma_buffer[CHANNEL_BUFFER_SAMPLES_SIZE * CHANNELS] = {};
-//     static inline volatile int8_t dma_channel = {-1};
-
-//     typedef struct {
-//         const uint8_t pin;
-//         const uint8_t adc_reference;
-//     } pin_reference_t;
-    
-//     constexpr inline static pin_reference_t pinReferences[pins_amount] = {
-//         {26, 0},    /* GPIO26 --> ADC_CHANNEL 0*/
-//         {27, 1},    /* GPIO27 --> ADC_CHANNEL 1*/
-//         {28, 2}     /* GPIO28 --> ADC_CHANNEL 2*/
-//     };
-
-//     const static inline constexpr uint32_t compute_clk_divider() {
-//         // 48 MHz/96 Cycles / DIV = Sampling Frequency.
-//         uint32_t divider_value = std::round((ADC_CLK_RATE / ADC_CYCLES_REQUIRED) / static_cast<uint32_t>(SAMPLE_RATE));
-//         divider_value = std::round(divider_value * CHANNELS);
-//         return divider_value;
-//     } 
+    static inline void stop_adc_static() {
+        adc_run(false);
+    }
 
 private: 
     constexpr static inline uint32_t clk_divider = IADC::compute_clk_divider();
-    static inline bool init_flag = false;
 
+    static inline bool init_flag = false;
     static inline TaskHandle_t notificationTask = nullptr;
     static inline uint16_t dma_buffer[CHANNEL_BUFFER_SAMPLES_SIZE * CHANNELS] = {};
     static inline volatile int8_t dma_channel = {-1};
@@ -165,7 +144,7 @@ private:
             &c,                                     // Configuration
             dma_buffer,                             // Destination buffer
             &adc_hw->fifo,                          // Source is ADC FIFO
-            CHANNEL_BUFFER_SAMPLES_SIZE * CHANNELS, // Transfer size
+            BATCH_BUFFER_SIZE * CHANNELS,           // Transfer size
             true                                    // start immediately
         );
     }
