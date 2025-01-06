@@ -3,6 +3,12 @@
 
 #include <stdint.h>
 
+/* Macro defines: */
+#define TRUE 1
+#define FALSE 0
+
+#define DEBUG (FALSE)
+
 enum class ADC_FREQUENCIES : uint32_t {
     FS_100hz    = 100,
     FS_1k       = 1'000,

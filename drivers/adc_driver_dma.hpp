@@ -58,7 +58,6 @@ public:
     }
 
 protected:
-
     const static inline bool start_adc_static() {
         init();
         if (init_flag) {
@@ -111,7 +110,7 @@ private:
                 true,       // DMA Enabled
                 CHANNELS,   // Threshold value, RP2350 can only hold 8 samples in FIFO
                 false,       // No error interrupts
-                false       // No threshold interrupts
+                false       // No byte shifts
             );
 
             if (SAMPLE_RATE >= (ADC_FREQUENCIES::FS_MAX_PICO)) {
@@ -150,11 +149,11 @@ private:
     }
 
     static void __not_in_flash_func(dma_irq_handler)(void) {
+        dma_hw->ints0 = 1u << dma_channel;
         if (! dma_channel_is_busy(dma_channel)) {
             BaseType_t xHigherPriorityTaskWoken = pdFALSE;
             vTaskNotifyGiveFromISR(notificationTask, &xHigherPriorityTaskWoken);
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-            dma_hw->ints0 = 1u << dma_channel;
         }
     }
 
