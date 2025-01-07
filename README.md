@@ -12,9 +12,12 @@ In more practical sense, it's a real-time processing system which locates the bu
 ## Getting Started
 **Clone by**: 
 
-``
-git clone --recurse-submodules git@github.com:RichardKroesen/M33-Sound-Locator.git
-``
+``git clone --recurse-submodules git@github.com:RichardKroesen/M33-Sound-Locator.git``
+
+**Building Steps**: 
+- mkdir build
+- cmake ..
+- make -j4
 
 ## Prerequisites 
 For proper usage of this repository the following things are needed: 
@@ -22,6 +25,7 @@ For proper usage of this repository the following things are needed:
 - PicoSDK (if it is not properly automatically build with CMake configuration).
 - Arm GCC Compiler: [download page](https://developer.arm.com/downloads/-/gnu-rm)
 - libusb [download page](https://libusb.info/)
+- For debugging J-Link: [weblink](https://www.segger.com/downloads/jlink/) 
  
 Or use on Linux the following command:
 `sudo apt install cmake python3 g++ build-essential ninja-build`
@@ -30,14 +34,14 @@ installing the Arm GCC compiler (the hard way)
 2) ```tar -xvf arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi.tar.xz```
 3) Move to a common location: ```sudo mv arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi /opt/```
 4) Add to path: ```export PATH=$PATH:/opt/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi/bin```
-5) For Pico SDK: ```export PICO_TOOLCHAIN_PATH=/opt/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi``
-    ``` export PATH=$PICO_TOOLCHAIN_PATH/bin:$PATH```
+5) For Pico SDK: ```export PICO_TOOLCHAIN_PATH=/opt/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi``` and ```export PATH=$PICO_TOOLCHAIN_PATH/bin:$PATH```
 
 ## Troubleshooting 
 Since in our project group everyone is working on a different system there could be some compilation issues. In this section the most common issues are documented for quick reference. 
 
-After you cloned load the submodules properly:
+- CMake Error at build/_deps/pico_sdk-src/cmake/preload/toolchains/util/find_compiler.cmake:29 (message):
+  Compiler 'arm-none-eabi-gcc' not found, you can specify search path with
+  "PICO_TOOLCHAIN_PATH". ==> Repeating step 5 seems to fix this issue. 
 
-``
-git submodule update --init
-`` 
+After you cloned load the submodules properly:
+``git submodule update --init`` 
