@@ -1,5 +1,6 @@
 add_executable(${NAME}
     main.cpp
+    algorithm.cpp
 )
 add_dependencies(${NAME} CMSISDSP)
 
@@ -17,6 +18,7 @@ target_include_directories(${NAME} PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src
 
     ${CMAKE_CURRENT_LIST_DIR}/../config
+    ${CMAKE_CURRENT_LIST_DIR}/../lib/eigen-3.4.0
 )
 
 # Add map/bin/hex file etc additionally.
