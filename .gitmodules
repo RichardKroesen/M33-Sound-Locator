@@ -4,3 +4,6 @@
 [submodule "lib/CMSIS-DSP"]
 	path = lib/CMSIS-DSP
 	url = https://github.com/ARM-software/CMSIS-DSP
+[submodule "lib/eigen3"]
+	path = lib/eigen3
+	url = https://gitlab.com/libeigen/eigen
