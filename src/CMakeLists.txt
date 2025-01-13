@@ -1,6 +1,5 @@
 add_executable(${NAME}
     main.cpp
-    algorithm.cpp
 )
 add_dependencies(${NAME} CMSISDSP)
 
