@@ -1,5 +1,5 @@
 
-#include "algorithm.hpp"
+#include "locator.hpp"
 
 #include <cmath>
 #include <Eigen/Dense>
