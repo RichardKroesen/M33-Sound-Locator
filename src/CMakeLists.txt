@@ -1,5 +1,6 @@
 add_executable(${NAME}
     main.cpp
+    SampleProcessor.cpp
 )
 add_dependencies(${NAME} CMSISDSP)
 
