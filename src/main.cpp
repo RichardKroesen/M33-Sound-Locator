@@ -6,6 +6,7 @@
 #include "pico/stdlib.h"
 #include <cstdio>
 
+#include <adc_driver.hpp>
 #include "arm_math.h" // Check of CMSIS DSP inclusion
 
 void mainTask(void *params) {
@@ -13,13 +14,23 @@ void mainTask(void *params) {
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
 
-    for (;;) {
-        static int mytemptemptempVar = 430;
-        gpio_put(PICO_DEFAULT_LED_PIN, 1);
-        vTaskDelay(500);
-        printf("Heartbeat...\n");
-        gpio_put(PICO_DEFAULT_LED_PIN, 0);
-        vTaskDelay(500);
+	static ADC::ADC_Driver<static_cast<uint32_t>(ADC_FREQUENCIES::FS_1k)>test{};
+	test.start_adc();
+    uint16_t adcSamples[3];
+
+	for (;;) {
+		static int mytemptemptempVar = 430;
+		gpio_put(PICO_DEFAULT_LED_PIN, 1);
+		// vTaskDelay(1 / portTICK_PERIOD_MS);
+
+        if (test.readSamples(adcSamples, 3)) {
+            printf("%u,%u,%u\n", adcSamples[0], adcSamples[1], adcSamples[2]);
+        } else {
+            printf("Failed to read ADC samples.\n");
+        }
+
+		gpio_put(PICO_DEFAULT_LED_PIN, 0);
+		// vTaskDelay(1 / portTICK_PERIOD_MS);
 
         ALGORITHM::SensorConfig sensors(
             ALGORITHM::vec2_t { 450, 90 },
@@ -41,7 +52,7 @@ void mainTask(void *params) {
 
 static inline void vLaunch() {
     TaskHandle_t task;
-    xTaskCreate(mainTask, "MainThread", 500, NULL, tskIDLE_PRIORITY, &task);
+    xTaskCreate(mainTask, "MainThread", 1000, NULL, 2, &task);
 
     /* Start the tasks and timer running. */
     vTaskStartScheduler();
@@ -52,6 +63,6 @@ int main() {
     stdio_init_all();
     vLaunch();
 
-    while(1);
-    return 1;
+	while (1);
+	return 1;
 }
