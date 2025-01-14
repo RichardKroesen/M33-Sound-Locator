@@ -11,7 +11,25 @@
 #include "arm_math.h" // Check of CMSIS DSP inclusion
 
 #include "adc_sample_distributor.hpp"
+#include "buzzer.hpp"
 
+// #include "dsp/transform_functions.h"
+
+void trigger_buzzer_task(void *param) {
+    constexpr uint8_t button_pin = 0; 
+    gpio_init(button_pin);
+    gpio_set_dir(button_pin, false);
+
+    static ACTUATOR::Buzzer<1> buz{};
+
+    while (true) {
+        if (gpio_get(button_pin) == 0) {
+            printf("Buzzer Started");
+            buz.start_buzzer(50000);
+        }
+        vTaskDelay(10000 / portTICK_PERIOD_MS);
+    }
+}
 
 void sampling_print_task(void *param) {
     constexpr uint32_t post_processing_buffer_size = 1000;
@@ -30,7 +48,6 @@ void sampling_print_task(void *param) {
 
     static ADC::ADC_Driver_DMA<FS, total_buffer_size, batch_buffer_size> adc_driver;
     static std::unique_ptr<uint16_t[]> buffer = std::make_unique<uint16_t[]>(batch_buffer_size);
-
 
     ADC::SampleDistributor<ADC::ISensor, 3> distributor({mic0, mic1, mic2});
 
@@ -63,9 +80,11 @@ int main() {
 
     xReturned = xTaskCreate(sampling_print_task, "SamplePrint_task", 
         1000, NULL, configMAX_PRIORITIES-1, &samp_print_handle);
-    if( xReturned != pdPASS ) {
-        vTaskDelete(samp_print_handle);
-    }
+    xTaskCreate(trigger_buzzer_task, "BuzzerTrigger_task", 1000, NULL, configMAX_PRIORITIES-1, nullptr);
+
+    // if( xReturned != pdPASS ) {
+    //     vTaskDelete(samp_print_handle);
+    // }
 
     vTaskStartScheduler();
 
