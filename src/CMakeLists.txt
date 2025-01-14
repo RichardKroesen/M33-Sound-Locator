@@ -17,6 +17,7 @@ target_include_directories(${NAME} PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src
 
     ${CMAKE_CURRENT_LIST_DIR}/../config
+    ${CMAKE_CURRENT_LIST_DIR}/../lib/eigen3
 )
 
 # Add map/bin/hex file etc additionally.

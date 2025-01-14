@@ -19,6 +19,19 @@ In more practical sense, it's a real-time processing system which locates the bu
 - cmake ..
 - make -j4
 
+**Flashing steps**
+Make sure the device is in BOOTSEL mode, this can be done by pressing the BOOTSEL button on the Pico. Afterwards there are two methods of uploading the file:
+
+1. Using file explorer
+
+Simply use a file explorer to drag the .uf2 file into the memory of the pico.
+
+2. Using picotool
+
+It is also possible to flash the device using picotool, type the command down below to flash using the picotool. This command assumes you are in the root of the project. NOT in the build folder!
+
+`picotool load -u -v -x -t elf build/src/LINEAR_SYSTEMS.elf`
+
 ## Prerequisites 
 For proper usage of this repository the following things are needed: 
 - CMake
