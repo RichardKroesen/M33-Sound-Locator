@@ -34,3 +34,5 @@
 build/
 .direnv/bin
 .direnv
+compile_commands.json
+.cache/clangd/index

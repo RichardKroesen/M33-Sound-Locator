@@ -15,6 +15,7 @@
           pkgs.gcc-arm-embedded-13
           pkgs.python3
           pkgs.cmake
+          pkgs.picotool
         ];
       };
     }
