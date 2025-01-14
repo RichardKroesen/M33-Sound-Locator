@@ -1,11 +1,11 @@
 
 #include <cstdio>
-#include <adc_driver.hpp>
 
 #include "FreeRTOS.h"
 #include "task.h"
 #include "pico/stdlib.h"
 
+#include "adc_driver.hpp"
 #include "locator.hpp"
 
 #include "SampleProcessor.h"
@@ -34,7 +34,7 @@ void mainTask(void *params) {
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
 
-	static ADC::ADC_Driver<static_cast<uint32_t>(ADC_FREQUENCIES::FS_1k)>test{};
+	static ADC::ADC_Driver<static_cast<uint32_t>(ADC_FREQUENCIES::FS_10k)>test{};
 	test.start_adc();
     uint16_t adcSamples[3];
 
