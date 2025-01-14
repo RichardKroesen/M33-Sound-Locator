@@ -5,7 +5,7 @@
 
 namespace Processing {
     // Size of the ADC samples array
-    constexpr static inline uint16_t SAMPLE_SIZE = 512;
+    constexpr static inline uint16_t SAMPLE_SIZE = 4096;
     // Sample rate of the ADC in Hz
     constexpr static inline uint32_t SAMPLE_RATE = 166666;
     // Maximum ADC value / 2 because sine is -1 to 1 so 0.0 is 2047.5
@@ -22,7 +22,7 @@ namespace Processing {
     public:
         SampleProcessor();
 
-        bool detect_frequency(const uint16_t adc_samples[SAMPLE_SIZE]);
+        bool detect_frequency(const float frequency, const uint16_t adc_samples[SAMPLE_SIZE]);
         
     private:
         void process_samples(const uint16_t adc_samples[SAMPLE_SIZE]);
