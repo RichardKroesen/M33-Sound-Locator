@@ -9,7 +9,7 @@
 using Eigen::Matrix2d;
 using Eigen::Vector2d;
 
-namespace Locator {
+namespace ALGORITHM {
     typedef struct vec2 {
         double x;
         double y;
@@ -23,9 +23,10 @@ namespace Locator {
 
     typedef sensor_t* sorted_sensors_t;
 
-    class SensorConfig {
+    template <uint8_t SENSORS = 3>
+    class AudioLocalizer_2D {
         private:
-            sensor_t sensors[3];
+            sensor_t sensors[SENSORS];
 
             void sort() {
                 // Since our input array is just 3 long, don't even bother with a sorting algorithm
@@ -42,19 +43,20 @@ namespace Locator {
                 }
             }
 
-            vec2_t mean_position() {
-                double mean_x = (
+            const vec2_t mean_position() {
+                vec2_t result;
+
+                const double mean_x = (
                     this->sensors[0].position.x +
                     this->sensors[1].position.x +
                     this->sensors[2].position.x
-                ) / 3;
-                double mean_y = (
+                ) / SENSORS;
+                const double mean_y = (
                     this->sensors[0].position.y +
                     this->sensors[1].position.y +
                     this->sensors[2].position.y
-                ) / 3;
+                ) / SENSORS;
                 
-                vec2_t result;
                 result.x = mean_x;
                 result.y = mean_y;
                 
@@ -65,16 +67,16 @@ namespace Locator {
              * Formula for determining the position to the source, given reference sensors
              * and timed distance between them
              */
-            inline double distance_parabola(vec2_t guess, vec2_t sensor, vec2_t reference, double distance) {
+            constexpr static inline double distance_parabola(vec2_t guess, vec2_t sensor, vec2_t reference, double distance) {
                 return 
                     sqrt(pow(guess.x - sensor.x, 2) + pow(guess.y - sensor.y, 2)) -
                     sqrt(pow(guess.x - reference.x, 2) + pow(guess.y - reference.y, 2)) -
                     distance;
             };
 
-            inline Vector2d equation_pass(const Vector2d& input) {
-                double distance_01 = (this->sensors[1].at - this->sensors[0].at) * this->speed_of_sound;
-                double distance_02 = (this->sensors[2].at - this->sensors[0].at) * this->speed_of_sound;
+            const inline Vector2d equation_pass(const Vector2d& input) {
+                double distance_01 = (this->sensors[1].at - this->sensors[0].at) * this->SPEED_OF_SOUND;
+                double distance_02 = (this->sensors[2].at - this->sensors[0].at) * this->SPEED_OF_SOUND;
 
                 vec2_t input_v = vec2_t { input[0], input [1] };
 
@@ -95,28 +97,29 @@ namespace Locator {
             /**
              * Partial derivative of `distance_parabola`, used in the jacobian matrix pass
              */
-            inline vec2_t distance_parabola_derivative(vec2_t guess, vec2_t sensor, vec2_t reference) {
-                double distance_sensor = sqrt(
+            constexpr static inline vec2_t distance_parabola_derivative(vec2_t guess, vec2_t sensor, vec2_t reference) {
+                const double distance_sensor = sqrt(
                     pow(guess.x - sensor.x, 2) + pow(guess.y - sensor.y, 2)
                 );
-                double distance_reference = sqrt(
+                const double distance_reference = sqrt(
                     pow(guess.x - reference.x, 2) + pow(guess.y - reference.y, 2)
                 );
+
                 assert(distance_sensor != 0);
                 assert(distance_reference != 0);
 
-                double x =
+                const double x =
                     (guess.x - sensor.x) / distance_sensor -
                     (guess.x - reference.x) / distance_reference;
 
-                double y =
+                const double y =
                     (guess.y - sensor.y) / distance_sensor -
                     (guess.y - reference.y) / distance_reference;
 
                 return vec2_t { x, y };
             };
             
-            inline Matrix2d jacobian_pass(const Vector2d& input) {
+            const inline Matrix2d jacobian_pass(const Vector2d& input) {
                 vec2_t input_v = vec2_t { input[0], input[1] };
                 vec2_t column_0 = this->distance_parabola_derivative(
                     input_v,
@@ -138,37 +141,41 @@ namespace Locator {
             }
 
         public:
-            double speed_of_sound = 340.29;
-            double max_iterations = 100;
-            double tolerance = 1e-6;
+            // @ Room temperature, later this should be a variable. 
+            constexpr static inline double SPEED_OF_SOUND = 340.29;
+            constexpr static inline double MAX_ITERATIONS = 100;
+            constexpr static inline double tolerance = 1e-6;
 
-            SensorConfig(vec2_t a, vec2_t b, vec2_t c) {
+            AudioLocalizer_2D(vec2_t a, vec2_t b, vec2_t c) {
                 this->sensors[0].position = a;
                 this->sensors[1].position = b;
                 this->sensors[2].position = c;
             }
 
-            void measured(size_t index, double time) {
+            ~AudioLocalizer_2D() = default;
+
+            void measured(const size_t index, const double time) {
                 assert(index >= 0 && "Index must be higher or equal to 0");
-                assert(index <= 2 && "Index must be lower than 3");
+                assert(index <= SENSORS-1 && "Index must be lower than 3");
 
                 this->sensors[index].at = time;
                 this->sensors[index].measured = true;
             };
 
-            bool calculate(vec2_t* out_position) {
+            const bool calculate(vec2_t* out_position) {
                 assert(this->sensors[0].measured && "Sensor 0 not measured");
                 assert(this->sensors[1].measured && "Sensor 1 not measured");
                 assert(this->sensors[2].measured && "Sensor 2 not measured");
+
                 this->sensors[0].measured = false;
                 this->sensors[1].measured = false;
                 this->sensors[2].measured = false;
 
                 this->sort();
-                vec2 mean = this->mean_position();
+                const vec2 mean = this->mean_position();
 
                 Vector2d input(mean.x, mean.y);
-                for (int iteration = 0; iteration < this->max_iterations; iteration++) {
+                for (int iteration = 0; iteration < this->MAX_ITERATIONS; iteration++) {
                     Vector2d output = this->equation_pass(input);
                     Matrix2d derivative = this->jacobian_pass(input);
 
@@ -183,6 +190,5 @@ namespace Locator {
                 }
                 return false;
             };
-    };
-}
-
+    }; // Class AudioLocalizer
+} // Namespace ALGORITHM
