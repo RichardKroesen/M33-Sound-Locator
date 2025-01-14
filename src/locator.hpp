@@ -5,6 +5,7 @@
 #include <cstddef>
 
 #include <Eigen/Dense>
+#include <cstdint>
 
 using Eigen::Matrix2d;
 using Eigen::Vector2d;
@@ -23,21 +24,22 @@ namespace ALGORITHM {
 
     typedef sensor_t* sorted_sensors_t;
 
-    template <uint8_t SENSORS = 3>
-    class AudioLocalizer_2D {
+    class SensorConfig {
         private:
+            constexpr static inline uint32_t SENSORS = 3;
+
             sensor_t sensors[SENSORS];
 
             void sort() {
                 // Since our input array is just 3 long, don't even bother with a sorting algorithm
                 // Just manually sort
                 if (this->sensors[0].at > this->sensors[1].at) {
-                    sensor_t temp = this->sensors[0];
+                    const sensor_t temp = this->sensors[0];
                     this->sensors[0] = this->sensors[1];
                     this->sensors[1] = temp;
                 }
                 if (this->sensors[1].at > this->sensors[2].at) {
-                    sensor_t temp = this->sensors[1];
+                    const sensor_t temp = this->sensors[1];
                     this->sensors[1] = this->sensors[2];
                     this->sensors[2] = temp;
                 }
@@ -67,7 +69,7 @@ namespace ALGORITHM {
              * Formula for determining the position to the source, given reference sensors
              * and timed distance between them
              */
-            constexpr static inline double distance_parabola(vec2_t guess, vec2_t sensor, vec2_t reference, double distance) {
+            const static inline double distance_parabola(const vec2_t guess, const vec2_t sensor, const vec2_t reference, double distance) {
                 return 
                     sqrt(pow(guess.x - sensor.x, 2) + pow(guess.y - sensor.y, 2)) -
                     sqrt(pow(guess.x - reference.x, 2) + pow(guess.y - reference.y, 2)) -
@@ -75,17 +77,17 @@ namespace ALGORITHM {
             };
 
             const inline Vector2d equation_pass(const Vector2d& input) {
-                double distance_01 = (this->sensors[1].at - this->sensors[0].at) * this->SPEED_OF_SOUND;
-                double distance_02 = (this->sensors[2].at - this->sensors[0].at) * this->SPEED_OF_SOUND;
+                const double distance_01 = (this->sensors[1].at - this->sensors[0].at) * this->speed_of_sound;
+                const double distance_02 = (this->sensors[2].at - this->sensors[0].at) * this->speed_of_sound;
 
-                vec2_t input_v = vec2_t { input[0], input [1] };
+                const vec2_t input_v = vec2_t { input[0], input [1] };
 
-                double x = this->distance_parabola(
+                const double x = this->distance_parabola(
                     input_v,
                     this->sensors[1].position, this->sensors[0].position,
                     distance_01
                 );
-                double y = this->distance_parabola(
+                const double y = this->distance_parabola(
                     input_v,
                     this->sensors[2].position, this->sensors[0].position,
                     distance_02
@@ -97,7 +99,7 @@ namespace ALGORITHM {
             /**
              * Partial derivative of `distance_parabola`, used in the jacobian matrix pass
              */
-            constexpr static inline vec2_t distance_parabola_derivative(vec2_t guess, vec2_t sensor, vec2_t reference) {
+            const static inline vec2_t distance_parabola_derivative(const vec2_t guess, const vec2_t sensor, const vec2_t reference) {
                 const double distance_sensor = sqrt(
                     pow(guess.x - sensor.x, 2) + pow(guess.y - sensor.y, 2)
                 );
@@ -142,17 +144,17 @@ namespace ALGORITHM {
 
         public:
             // @ Room temperature, later this should be a variable. 
-            constexpr static inline double SPEED_OF_SOUND = 340.29;
-            constexpr static inline double MAX_ITERATIONS = 100;
-            constexpr static inline double tolerance = 1e-6;
+            double speed_of_sound = 340.29;
+            double max_iterations = 100;
+            double tolerance = 1e-6;
 
-            AudioLocalizer_2D(vec2_t a, vec2_t b, vec2_t c) {
+            SensorConfig(vec2_t a, vec2_t b, vec2_t c) {
                 this->sensors[0].position = a;
                 this->sensors[1].position = b;
                 this->sensors[2].position = c;
             }
 
-            ~AudioLocalizer_2D() = default;
+            ~SensorConfig() = default;
 
             void measured(const size_t index, const double time) {
                 assert(index >= 0 && "Index must be higher or equal to 0");
@@ -175,7 +177,7 @@ namespace ALGORITHM {
                 const vec2 mean = this->mean_position();
 
                 Vector2d input(mean.x, mean.y);
-                for (int iteration = 0; iteration < this->MAX_ITERATIONS; iteration++) {
+                for (int iteration = 0; iteration < this->max_iterations; iteration++) {
                     Vector2d output = this->equation_pass(input);
                     Matrix2d derivative = this->jacobian_pass(input);
 

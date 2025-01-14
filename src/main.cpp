@@ -21,7 +21,7 @@ void mainTask(void *params) {
         gpio_put(PICO_DEFAULT_LED_PIN, 0);
         vTaskDelay(500);
 
-        ALGORITHM::AudioLocalizer_2D sensors(
+        ALGORITHM::SensorConfig sensors(
             ALGORITHM::vec2_t { 450, 90 },
             ALGORITHM::vec2_t { 420, 380 },
             ALGORITHM::vec2_t { 50, 50 }
