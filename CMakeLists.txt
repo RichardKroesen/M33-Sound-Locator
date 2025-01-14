@@ -6,6 +6,7 @@ set(NAME LINEAR_SYSTEMS)
 
 set(PICO_SDK_FETCH_FROM_GIT ON)
 set(PICOTOOL_FETCH_FROM_GIT_PATH ON)
+set(PICOTOOL_FORCE_FETCH_FROM_GIT ON)
 message("Pico SDK Source Directory: ${pico_sdk_SOURCE_DIR}")
 if (NOT DEFINED PICO_SDK_PATH)
     set(PICO_SDK_PATH "$ENV{PICO_SDK_PATH}")
@@ -36,4 +37,7 @@ add_compile_options(-Wall -Wno-format -Wno-unused-function -Wno-maybe-uninitiali
 
 # Link to libraries and set target executable
 add_subdirectory(src)
+
+# Import of libraries
+add_subdirectory(drivers)
 add_subdirectory(${CMSISDSP}/Source bin_dsp)
