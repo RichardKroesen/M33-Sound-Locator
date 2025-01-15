@@ -1,4 +1,3 @@
-
 #include <cstdio>
 
 #include "FreeRTOS.h"
@@ -47,11 +46,8 @@ void mainTask(void *params) {
 		gpio_put(PICO_DEFAULT_LED_PIN, 1);
 		// vTaskDelay(1 / portTICK_PERIOD_MS);
 
-        if (test.readSamples(adcSamples, 3)) {
-            printf("%u,%u,%u\n", adcSamples[0], adcSamples[1], adcSamples[2]);
-        } else {
-            printf("Failed to read ADC samples.\n");
-        }
+    using Microphone2 = SENSOR::Microphone<2, post_processing_buffer_size>;
+    auto mic2 = std::make_shared<Microphone2>();
 
 		gpio_put(PICO_DEFAULT_LED_PIN, 0);
 
@@ -86,8 +82,22 @@ static inline void vLaunch() {
     TaskHandle_t task;
     xTaskCreate(mainTask, "MainThread", 2000, NULL, tskIDLE_PRIORITY, &task);
 
-    /* Start the tasks and timer running. */
-    vTaskStartScheduler();
+    ADC::SampleDistributor<ADC::ISensor, 3> distributor({mic0, mic1, mic2});
+
+    adc_driver.set_notification_task(xTaskGetCurrentTaskHandle());
+    adc_driver.start_adc();
+
+    while (true) {
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        adc_driver.copy_buffer(buffer, batch_buffer_size);
+
+        for (uint32_t i = 0; i < batch_buffer_size-2; i = i + 3) {
+            printf("%u,%u,%u\n", buffer[i], buffer[i+1], buffer[i+2]);
+        }
+
+        distributor.distribute_samples<batch_buffer_size>(buffer);
+        adc_driver.start_adc();
+    }
 }
 
 int main() {
