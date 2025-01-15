@@ -18,15 +18,13 @@ public:
     ~Buzzer() = default;
 
     static inline void start_buzzer(const uint32_t duration_ms) {
-        if (init_flag) {
-            pwm_set_enabled(slice_num, true);
-            buzzer_terminated_flag = false;
-            // pwm_set_wrap(slice_num, complete_slice);
-            // pwm_set_chan_level(slice_num, PWM_CHAN_A, 40);
-            add_alarm_in_ms(duration_ms, single_shot_timer_callback, NULL, false);
-        } else {
+        if (! init_flag) {
             init();
         }
+        
+        pwm_set_enabled(slice_num, true);
+        buzzer_terminated_flag = false;
+        add_alarm_in_ms(duration_ms, single_shot_timer_callback, NULL, false);
     }
 
     static inline void stop_buzzer() {
@@ -48,11 +46,19 @@ public:
         buzzer_frequency = ft; 
     }
 
+    static inline void set_volume(const uint8_t percentage) {
+        duty_cycle = percentage;
+        init_flag = false; 
+    }
+
 private:
     constexpr static inline uint8_t clk_divider = 200;
     constexpr static inline uint32_t pwm_clock = (150'000'000/clk_divider);
     static inline uint32_t buzzer_frequency = 500;
     static inline uint32_t duty_cycle = 50; 
+
+    static inline uint16_t wrap_cycle = 100;
+    static inline uint32_t cycle_high = 50; 
 
     static inline bool init_flag = false;
     static inline uint8_t slice_num = 0;
@@ -62,8 +68,8 @@ private:
         assert(buzzer_frequency > 0 && "Error, buzzer must be greater than 0.");
 
         if (! init_flag) {
-            const uint16_t wrap_cycle = (pwm_clock/buzzer_frequency);
-            const uint32_t cycle_high = (wrap_cycle/100) * duty_cycle;
+            wrap_cycle = (pwm_clock/buzzer_frequency);
+            cycle_high = round((wrap_cycle/100)) * duty_cycle;
 
             gpio_set_function(PIN, GPIO_FUNC_PWM);
             slice_num = pwm_gpio_to_slice_num(PIN);
@@ -71,11 +77,11 @@ private:
             pwm_set_clkdiv(slice_num, static_cast<float>(clk_divider));
             pwm_set_wrap(slice_num, wrap_cycle);
             
-            if constexpr (PIN % 2) {
+            if constexpr ((PIN % 2) == 0) {
                 /* Even Pins must select CHAN_A */
-                pwm_set_chan_level(slice_num, PWM_CHAN_A, cycle_high);
+                pwm_set_chan_level(slice_num, PWM_CHAN_A, cycle_high + 1);
             } else {
-                pwm_set_chan_level(slice_num, PWM_CHAN_B, cycle_high);
+                pwm_set_chan_level(slice_num, PWM_CHAN_B, cycle_high + 1);
             }
 
             pwm_set_enabled(slice_num, false);

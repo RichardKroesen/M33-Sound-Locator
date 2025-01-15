@@ -19,14 +19,11 @@ public:
         notification_ref = task;
     }
 
-    const static inline bool enable_detection(void) {
+    const static inline void enable_detection(void) {
         if (! init_flag) {
             init();
-            // gpio_set_irq_enabled_with_callback(PIN, GPIO_IRQ_EDGE_FALL, true, &gpio_callback);
-            return true; 
-        } else {
-            return false;
         }
+        gpio_set_irq_enabled_with_callback(PIN, GPIO_IRQ_EDGE_FALL, true, &gpio_callback);
     }
 
 private:
@@ -37,15 +34,17 @@ private:
         if (! init_flag) {
             gpio_init(PIN);
             gpio_set_dir(PIN, false); // Input
-            gpio_set_irq_enabled_with_callback(PIN, GPIO_IRQ_EDGE_FALL, true, &gpio_callback);
+            gpio_set_irq_enabled_with_callback(PIN, GPIO_IRQ_EDGE_FALL, false, &gpio_callback);
             init_flag = true;
         }
     }    
 
     static void gpio_callback(uint gpio, uint32_t events) {
         if(gpio == PIN) {
-            xTaskNotifyGive(notification_ref);
-            // printf("My Name is Jeff\r\n");
+            BaseType_t xHigherPriorityTaskWoken;
+            xHigherPriorityTaskWoken = pdFALSE;
+            vTaskNotifyGiveFromISR(notification_ref , &xHigherPriorityTaskWoken);
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
     }
 };  
