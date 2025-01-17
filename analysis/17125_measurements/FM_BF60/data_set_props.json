@@ -1,0 +1,13 @@
+{
+    "sampling_frequency": 500000,
+    "buffer_size": 60,
+    "default_sample_size": 100000,
+    "static_size": 15000000,
+    "buzzer_settings": [
+        {
+            "frequency": 6000,
+            "width_duration_ms": 100,
+            "volume_duty": 40
+        }
+    ]
+}
