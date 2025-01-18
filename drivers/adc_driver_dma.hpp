@@ -4,6 +4,7 @@
 #include <math.h> // rounding
 #include <memory> // Smarpointer
 #include <iterator> // iterators
+#include <cstring>
 
 #include "FreeRTOS.h"
 #include "task.h"

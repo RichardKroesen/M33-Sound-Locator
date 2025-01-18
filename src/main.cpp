@@ -1,14 +1,14 @@
 #include <cstdio>
-
 #include "FreeRTOS.h"
 #include "task.h"
 #include "pico/stdlib.h"
 
-#include "adc_driver.hpp"
+#include <adc_driver_dma.hpp>
+#include <microphone_sensor.hpp>
+#include "arm_math.h"
+#include "adc_sample_distributor.hpp"
 #include "locator.hpp"
-
 #include "SampleProcessor.h"
-#include "arm_math.h" // Check of CMSIS DSP inclusion
 
 uint16_t adc_samples[Processing::SAMPLE_SIZE] = {0};
 
@@ -33,8 +33,6 @@ void mainTask(void *params) {
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
 
-	static ADC::ADC_Driver<static_cast<uint32_t>(ADC_FREQUENCIES::FS_10k)>test{};
-	test.start_adc();
     uint16_t adcSamples[3];
 
     sleep_ms(2000);
@@ -45,9 +43,6 @@ void mainTask(void *params) {
     for (;;) {
 		gpio_put(PICO_DEFAULT_LED_PIN, 1);
 		// vTaskDelay(1 / portTICK_PERIOD_MS);
-
-    using Microphone2 = SENSOR::Microphone<2, post_processing_buffer_size>;
-    auto mic2 = std::make_shared<Microphone2>();
 
 		gpio_put(PICO_DEFAULT_LED_PIN, 0);
 
@@ -78,9 +73,23 @@ void mainTask(void *params) {
     }
 }
 
-static inline void vLaunch() {
-    TaskHandle_t task;
-    xTaskCreate(mainTask, "MainThread", 2000, NULL, tskIDLE_PRIORITY, &task);
+void sampling_print_task(void *param) {
+    constexpr uint32_t post_processing_buffer_size = 1000;
+    using Microphone0 = SENSOR::Microphone<0, post_processing_buffer_size>;
+    auto mic0 = std::make_shared<Microphone0>();
+    
+    using Microphone1 = SENSOR::Microphone<1, post_processing_buffer_size>;
+    auto mic1 = std::make_shared<Microphone1>();
+
+    using Microphone2 = SENSOR::Microphone<2, post_processing_buffer_size>;
+    auto mic2 = std::make_shared<Microphone2>();
+
+    constexpr ADC_FREQUENCIES FS = ADC_FREQUENCIES::FS_MAX_PICO;
+    constexpr uint32_t total_buffer_size = 60;
+    constexpr uint32_t batch_buffer_size = 12;
+
+    static ADC::ADC_Driver_DMA<FS, total_buffer_size, batch_buffer_size> adc_driver;
+    static std::unique_ptr<uint16_t[]> buffer = std::make_unique<uint16_t[]>(batch_buffer_size);
 
     ADC::SampleDistributor<ADC::ISensor, 3> distributor({mic0, mic1, mic2});
 
@@ -101,10 +110,26 @@ static inline void vLaunch() {
 }
 
 int main() {
-    /* Setup */
-    stdio_init_all();
-    vLaunch();
+	/* Setup */
+	stdio_init_all();
 
-	while (1);
+    BaseType_t xReturned, xReturned2;
+    TaskHandle_t samp_print_handle;
+    TaskHandle_t task;
+
+    xReturned = xTaskCreate(sampling_print_task, "SamplePrint_task", 
+        1000, NULL, configMAX_PRIORITIES-1, &samp_print_handle);
+    xReturned2 = xTaskCreate(mainTask, "MainThread", 2000, NULL, tskIDLE_PRIORITY, &task);
+
+    if( xReturned != pdPASS ) {
+        vTaskDelete(samp_print_handle);
+    }
+    if (xReturned2 != pdPASS) {
+        vTaskDelete(task);
+    }
+
+    vTaskStartScheduler();
+
+    for (;;) {}
 	return 1;
 }
