@@ -4,7 +4,7 @@ import numpy as np
 from scipy.fft import fft, fftfreq
 
 # DATASET 
-data_file = '17125_measurements/FM_BF600/static.csv'  # Replace with your filename
+data_file = '17125_measurements/FM_BF600/static.csv' 
 df = pd.read_csv(data_file)
 
 # DEFINES

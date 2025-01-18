@@ -5,11 +5,11 @@ from scipy.signal import firwin, lfilter
 from scipy.fft import fft, fftfreq
 
 # DATASET 
-data_file = '17125_measurements/FM_BF600/BUZ-P20x20.csv'  # Replace with your filename
+data_file = '17125_measurements/FM_BF600/BUZ-P20x20.csv'
 df = pd.read_csv(data_file)
 
 # DEFINES
-NUM_TAPS = 51  # Number of filter coefficients
+NUM_TAPS = 51 
 PASS_BAND = 3995 
 BW = 5
 SAMPLE_RATE = (500_000 / 3)
