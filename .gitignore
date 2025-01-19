@@ -36,3 +36,7 @@ build/
 .direnv
 compile_commands.json
 .cache/clangd/index
+
+# Remove the created temporary files of LTspice from simulation plots
+*.log
+*.raw
