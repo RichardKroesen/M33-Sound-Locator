@@ -5,12 +5,12 @@ from scipy.signal import firwin, lfilter
 from scipy.fft import fft, fftfreq
 
 # DATASET 
-data_file = '17125_measurements/FM_BF600/BUZ-P20x20.csv'
+data_file = './analysis/24125-Atlas/P20x35.csv'
 df = pd.read_csv(data_file)
 
 # DEFINES
-NUM_TAPS = 51 
-PASS_BAND = 3995 
+NUM_TAPS = 501 
+PASS_BAND = 250 
 BW = 5
 SAMPLE_RATE = (500_000 / 3)
 
