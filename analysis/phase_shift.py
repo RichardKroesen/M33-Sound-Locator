@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from scipy.signal import correlate
 
 # Script analysis setup # 
-SAMPLE_RATE = (500_000 / 3) 
-csv_file = "./analysis/24125-Atlas/P0x50.csv"
+SAMPLE_RATE = (500_000 / 3)     
+csv_file = "./analysis/24125-Atlas/P55x-5.csv"
 
 def remove_dc_offset(signal):
     """Remove DC offset from a signal."""
