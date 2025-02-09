@@ -58,3 +58,45 @@ Since in our project group everyone is working on a different system there could
 
 After you cloned load the submodules properly:
 ``git submodule update --init`` 
+
+## Project state
+This repository contains the development and implementation of a real-time sound source localization system. The project integrates signal processing, embedded systems, and hardware design for accurate 2D localization.
+
+Current version is contains an embedded codebase which is used as data logging acquisition. And then manually feeding these logs into model scripts so that system evaluation is feasible. The intent is to finalize this project someday as a hobby, but for now it is released for the course finalization. 
+
+### Finalization Steps
+- Implement TDOA algorithm on the embedded device => Python model conversion
+- Integrate key signal processing features:
+  - Target signal validation
+  - Time Difference of Arrival (TDOA) estimation
+  - Final system testing
+- Produce a refined PCB design with:
+  - Active bandpass filter
+  - Variable amplifier
+  - Stable reference voltage and improved grounding
+
+### Lessons Learned
+- Peak-based TDOA derivation is unreliable.
+- Buzzers produce unsuitable waveforms for processing.
+- Batch sampling introduces artifacts affecting analysis.
+- Data transmission adds timing constraints but is irrelevant in a fully embedded system.
+
+### Solutions Provided
+- Designed PCB with anti-aliasing filter and amplifier.
+- Developed real-time ADC DMA-based batch sampling (FreeRTOS).
+- Implemented cross-correlation-based TDOA estimation.
+- Achieved millimeter-precision real-time localization.
+- Optimized target sound source detection using CMSIS-DSP.
+- Provided insights for future improvements and finalization.
+
+### Optimalization 
+- Remove virtual interface implementation, which really not optimal and determinalistic approach. But it made prototyping convenient, the recommendation is to introduce curiously recurring template design pattern (CRTP), which makes polymorphism more determinalistic than currently. 
+- For an even more enhancement dual-core functionally could be utilized for handling the ADC DMA on one core and the processing on the other. 
+- ADC DMA logging and control is currently not efficient, since ASCII characters are send over instead of raw bytes. Besides the fact that the ADC also is blocked for around 20 ms (calculations are in our project report under appendix 1) before it can continue (we decided to keep it like this for simplicity and it worked well enough for our experimentation purpose). 
+
+## Acknowledgements 
+It is only fair to credit resources which inspired or gave an excellent example which already existed.
+
+Our cmake FreeRTOS configuration is inspired by Dr. Jon Durrant, from [this repository](https://github.com/jondurrant/RPIPicoFreeRTOSSMPExp). 
+
+Besides the Raspberry Pi Pico repository of FreeRTOS porting helped out, especially for RP2350 there were some troubles which are already described in the issues-list.
