@@ -91,3 +91,12 @@ Current version is contains an embedded codebase which is used as data logging a
 
 ### Optimalization 
 - Remove virtual interface implementation, which really not optimal and determinalistic approach. But it made prototyping convenient, the recommendation is to introduce curiously recurring template design pattern (CRTP), which makes polymorphism more determinalistic than currently. 
+- For an even more enhancement dual-core functionally could be utilized for handling the ADC DMA on one core and the processing on the other. 
+- ADC DMA logging and control is currently not efficient, since ASCII characters are send over instead of raw bytes. Besides the fact that the ADC also is blocked for around 20 ms (calculations are in our project report under appendix 1) before it can continue (we decided to keep it like this for simplicity and it worked well enough for our experimentation purpose). 
+
+## Acknowledgements 
+It is only fair to credit resources which inspired or gave an excellent example which already existed.
+
+Our cmake FreeRTOS configuration is inspired by Dr. Jon Durrant, from [this repository](https://github.com/jondurrant/RPIPicoFreeRTOSSMPExp). 
+
+Besides the Raspberry Pi Pico repository of FreeRTOS porting helped out, especially for RP2350 there were some troubles which are already described in the issues-list.
