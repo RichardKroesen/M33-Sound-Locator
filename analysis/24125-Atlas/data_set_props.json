@@ -1,0 +1,12 @@
+{
+    "sampling_frequency": 500000,
+    "buffer_size": 6000,
+    "default_sample_size": 100000,
+    "static_size": "arbitrary",
+    "speaker_settings": [
+        {
+            "frequency": 250,
+            "width_duration_ms": "continuous"
+        }
+    ]
+}
